@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: woodpecker-bootstrap
+  namespace: woodpecker
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      serviceAccountName: woodpecker-bootstrap
+      restartPolicy: Never
+      containers:
+        - name: bootstrap
+          image: alpine:3.20
+          command: ["/bin/sh", "/scripts/bootstrap.sh"]
+          env:
+            - name: OPENBAO_ADDR
+              value: "http://homelab-openbao.openbao.svc:8200"
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+      volumes:
+        - name: script
+          configMap:
+            name: woodpecker-bootstrap-script
+            defaultMode: 0555

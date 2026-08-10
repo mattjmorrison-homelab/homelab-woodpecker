@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: woodpecker-server
+  namespace: woodpecker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: woodpecker-server
+  template:
+    metadata:
+      labels:
+        app: woodpecker-server
+    spec:
+      serviceAccountName: woodpecker-server
+      containers:
+        - name: woodpecker-server
+          image: woodpeckerci/woodpecker-server:latest
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: grpc
+              containerPort: 9000
+          env:
+            - name: WOODPECKER_OPEN
+              value: "false"
+            - name: WOODPECKER_ADMIN
+              value: "mattjmorrison"
+            - name: WOODPECKER_HOST
+              value: "https://woodpecker.morrisons.site"
+            - name: WOODPECKER_GITHUB
+              value: "true"
+            - name: WOODPECKER_SECRET_SERVICE
+              value: "vault"
+            - name: WOODPECKER_VAULT_ADDR
+              value: "http://homelab-openbao.openbao.svc:8200"
+            - name: WOODPECKER_GITHUB_CLIENT
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-secrets
+                  key: GITHUB_CLIENT
+            - name: WOODPECKER_GITHUB_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-secrets
+                  key: GITHUB_SECRET
+            - name: WOODPECKER_AGENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-secrets
+                  key: AGENT_SECRET
+            - name: WOODPECKER_VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-secrets
+                  key: VAULT_TOKEN
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/woodpecker
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: woodpecker-server

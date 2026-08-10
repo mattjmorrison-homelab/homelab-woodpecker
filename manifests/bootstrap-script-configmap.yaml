@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: woodpecker-bootstrap-script
+  namespace: woodpecker
+data:
+  bootstrap.sh: |
+    #!/bin/sh
+    set -eu
+
+    apk add --no-cache curl jq >/dev/null
+
+    SA_JWT=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+    VAULT_TOKEN_SELF=$(curl -sf -X POST "$OPENBAO_ADDR/v1/auth/kubernetes/login" \
+      -d "{\"jwt\": \"$SA_JWT\", \"role\": \"woodpecker-bootstrap\"}" | jq -r .auth.client_token)
+
+    # 404s if the secret doesn't exist yet at all -- treat that the same as "no data"
+    EXISTING=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN_SELF" \
+      "$OPENBAO_ADDR/v1/kv/data/homelab/woodpecker" || echo '{}')
+
+    CURRENT_VAULT_TOKEN=$(echo "$EXISTING" | jq -r '.data.data.VAULT_TOKEN // empty')
+
+    if [ -n "$CURRENT_VAULT_TOKEN" ]; then
+      echo "VAULT_TOKEN already present in kv/homelab/woodpecker, skipping."
+      exit 0
+    fi
+
+    echo "No VAULT_TOKEN found, minting one..."
+    NEW_TOKEN=$(curl -sf -X POST -H "X-Vault-Token: $VAULT_TOKEN_SELF" \
+      -d '{"policies": ["woodpecker-pipelines"], "no_default_policy": true}' \
+      "$OPENBAO_ADDR/v1/auth/token/create" | jq -r .auth.client_token)
+
+    # Merge into whatever's already at this path (e.g. GITHUB_CLIENT/GITHUB_SECRET/AGENT_SECRET)
+    # rather than overwriting it -- KV v2 writes replace the whole secret otherwise.
+    EXISTING_DATA=$(echo "$EXISTING" | jq -c '.data.data // {}')
+    MERGED=$(echo "$EXISTING_DATA" | jq --arg vt "$NEW_TOKEN" '. + {VAULT_TOKEN: $vt}')
+
+    curl -sf -X POST -H "X-Vault-Token: $VAULT_TOKEN_SELF" \
+      -H "Content-Type: application/json" \
+      -d "{\"data\": $MERGED}" \
+      "$OPENBAO_ADDR/v1/kv/data/homelab/woodpecker" > /dev/null
+
+    echo "Stored new VAULT_TOKEN in kv/homelab/woodpecker."
