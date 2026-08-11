@@ -3,6 +3,9 @@ kind: ConfigMap
 metadata:
   name: woodpecker-bootstrap-script
   namespace: woodpecker
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/sync-wave: "-1"
 data:
   bootstrap.sh: |
     #!/bin/sh
