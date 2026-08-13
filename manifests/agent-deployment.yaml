@@ -24,6 +24,8 @@ spec:
               value: "kubernetes"
             - name: WOODPECKER_BACKEND_K8S_NAMESPACE
               value: "woodpecker"
+            - name: WOODPECKER_BACKEND_K8S_STORAGE_RWX
+              value: "false"
             - name: WOODPECKER_AGENT_SECRET
               valueFrom:
                 secretKeyRef:
