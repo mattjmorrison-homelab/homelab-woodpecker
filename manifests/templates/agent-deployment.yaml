@@ -16,7 +16,7 @@ spec:
       serviceAccountName: woodpecker-agent
       containers:
         - name: woodpecker-agent
-          image: woodpeckerci/woodpecker-agent:v3.17.0
+          image: "{{ .Values.agent.image.repository }}:{{ .Values.agent.image.tag }}"
           env:
             - name: WOODPECKER_SERVER
               value: "woodpecker-server:9000"

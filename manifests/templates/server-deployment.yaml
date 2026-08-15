@@ -18,7 +18,7 @@ spec:
       serviceAccountName: woodpecker-server
       containers:
         - name: woodpecker-server
-          image: woodpeckerci/woodpecker-server:v3.17.0
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
           ports:
             - name: http
               containerPort: 8000

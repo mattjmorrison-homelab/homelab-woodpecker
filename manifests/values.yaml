@@ -1,0 +1,9 @@
+agent:
+  image:
+    repository: woodpeckerci/woodpecker-agent
+    tag: v3.17.0
+
+server:
+  image:
+    repository: woodpeckerci/woodpecker-server
+    tag: v3.17.0
