@@ -26,6 +26,13 @@ spec:
               value: "woodpecker"
             - name: WOODPECKER_BACKEND_K8S_STORAGE_RWX
               value: "false"
+            # Lets a step's backend_options.kubernetes.nodeSelector actually
+            # take effect (disabled by default — otherwise any push-access
+            # user could pin pipeline pods onto arbitrary nodes). Needed so
+            # graph-hdmi-switch can pin its kaniko build to an arm64 node —
+            # its base images are arm64-only and kaniko can't cross-build.
+            - name: WOODPECKER_BACKEND_K8S_POD_NODE_SELECTOR_ALLOW_FROM_STEP
+              value: "true"
             - name: WOODPECKER_AGENT_SECRET
               valueFrom:
                 secretKeyRef:
