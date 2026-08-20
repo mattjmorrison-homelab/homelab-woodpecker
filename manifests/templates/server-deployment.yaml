@@ -57,6 +57,11 @@ spec:
                 secretKeyRef:
                   name: woodpecker-secrets
                   key: VAULT_TOKEN
+            - name: WOODPECKER_PROMETHEUS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: woodpecker-secrets
+                  key: PROMETHEUS_AUTH_TOKEN
           volumeMounts:
             - name: data
               mountPath: /var/lib/woodpecker
