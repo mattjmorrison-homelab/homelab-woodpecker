@@ -36,7 +36,7 @@ spec:
             # Lets a step's backend_options.kubernetes.secrets reference an
             # existing native Kubernetes Secret directly (disabled by default,
             # same reasoning as the node-selector flag above). Needed for
-            # gh-org's tofu-apply step to read its GitHub token from
+            # admin-github's tofu-apply step to read its GitHub token from
             # gh-org-github-token instead of Woodpecker's own secret store.
             - name: WOODPECKER_BACKEND_K8S_ALLOW_NATIVE_SECRETS
               value: "true"
