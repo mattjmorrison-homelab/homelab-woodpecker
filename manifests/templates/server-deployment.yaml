@@ -36,7 +36,7 @@ spec:
             - name: WOODPECKER_SECRET_SERVICE
               value: "vault"
             - name: WOODPECKER_VAULT_ADDR
-              value: "http://homelab-openbao.openbao.svc:8200"
+              value: "http://k8s-openbao.openbao.svc:8200"
             - name: WOODPECKER_GITHUB_CLIENT
               valueFrom:
                 secretKeyRef:
